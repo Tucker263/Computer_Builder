@@ -3,73 +3,8 @@ const config = {
     url: "https://api.recursionist.io/builder/computers?type="
 };
 
-class Model{
-    static cpuParts = [];
-    static gpuParts = [];
-    static ramParts = [];
-    static hddParts = [];
-    static ssdParts = [];
-
-    //セッター関数
-    //pcの各パーツをセット、セットは一度きり
-    static setCpuParts(parts){
-        Model.cpuParts = parts;
-        Object.freeze(Model.cpuParts);
-    }
-
-    static setGpuParts(parts){
-        Model.gpuParts = parts;
-        Object.freeze(Model.gpuParts);
-    }
-
-    static setRamParts(parts){
-        Model.ramParts = parts;
-        Object.freeze(Model.ramParts);
-    }
-
-    static setHddParts(parts){
-        Model.hddParts = parts;
-        Object.freeze(Model.hddParts);
-    }
-
-    static setSsdParts(parts){
-        Model.ssdParts = parts;
-        Object.freeze(Model.ssdParts);
-    }
-
-    //ゲッター関数
-    //cpuのブランド配列を取得
-    static getCpuBrands(){
-        let cpuBrands = Model.cpuParts.map(cpu => cpu.Brand);
-        return Model.removeDuplicateInArr(cpuBrands);
-    }
-
-    //cpuのモデル配列をcpuのブランドから取得
-    static getCpuModels(cpuBrand){
-        return Model.cpuParts
-                    .filter(cpu => cpu.Brand === cpuBrand)
-                    .map(cpu => cpu.Model);
-    }
-
-    //gpuのブランド配列を取得
-    static getGpuBrands(){
-        let gpuBrands = Model.gpuParts.map(gpu => gpu.Brand);
-        return Model.removeDuplicateInArr(gpuBrands);
-    }
-
-    //gpuのモデル配列をgpuのブランドから取得
-    static getGpuModels(gpuBrand){
-        return Model.gpuParts
-                    .filter(gpu => gpu.Brand === gpuBrand)
-                    .map(gpu => gpu.Model);
-    }
-
-    //ramの本数(amount)配列を取得
-    static getRamAmounts(){
-        let ramAmounts = Model.ramParts.map(ram => Model.getRamAmount(ram));
-        return Model.removeDuplicateInArr(ramAmounts);
-    }
-
+//セッターヘルパー関数
+class SetterHelper{
     //ramの本数(amount)を取得
     static getRamAmount(ram){
         let stringArr = ram.Model.split(" ");
@@ -77,33 +12,10 @@ class Model{
         return string.substring(0, string.indexOf("x"));
     }
 
-    //ramのブランド配列をramの本数(amount)から取得
-    static getRamBrands(ramAmount){
-        let ramBrands = Model.ramParts
-                            .filter(ram => Model.getRamAmount(ram) === ramAmount)
-                            .map(ram => ram.Brand);
-        return Model.removeDuplicateInArr(ramBrands);
-    }
-
-    //ramのモデル配列をramの本数(amount)とブランドから取得
-    static getRamModels(ramAmount, ramBrand){
-        return Model.ramParts
-                    .filter(ram => Model.getRamAmount(ram) === ramAmount)
-                    .filter(ram => ram.Brand === ramBrand)
-                    .map(ram => ram.Model);
-    }
-
-    //hddのストレージ配列を取得
-    static getHddStorages(){
-        let gbArr = Model.getBiteArr(Model.hddParts, "GB");
-        let tbArr = Model.getBiteArr(Model.hddParts, "TB");
-        return tbArr.concat(gbArr);
-    }
-
-    //ssdのストレージ配列を取得
-    static getSsdStorages(){
-        let gbArr = Model.getBiteArr(Model.ssdParts, "GB");
-        let tbArr = Model.getBiteArr(Model.ssdParts, "TB");
+    //ストレージのバイト数配列を取得
+    static getStorageBiteArr(storageParts){
+        let gbArr = SetterHelper.getBiteArr(storageParts, "GB");
+        let tbArr = SetterHelper.getBiteArr(storageParts, "TB");
         return tbArr.concat(gbArr);
     }
 
@@ -111,10 +23,10 @@ class Model{
     static getBiteArr(storageParts, type){
         let biteArr = storageParts.map(parts => parts.Model)
                                 .filter(model => model.includes(type))
-                                .map(model => Model.getBitefromModel(model, type))
+                                .map(model => SetterHelper.getBitefromModel(model, type))
                                 .sort((a, b) => b - a)
                                 .map(amount => amount + type);
-        return Model.removeDuplicateInArr(biteArr);
+        return SetterHelper.removeDuplicateInArr(biteArr);
     }
 
     //Biteをモデルとタイプから取得
@@ -126,57 +38,114 @@ class Model{
         return biteString.substring(0, atBite);
     }
 
-    ////hddのブランド配列をbiteから取得
-    static getHddBrands(hddBite){
-        let hddBrands = Model.hddParts
-                            .filter(hdd => hdd.Model.includes(hddBite))
-                            .map(hdd => hdd.Brand);
-        return Model.removeDuplicateInArr(hddBrands);
+    //GB、TBをモデルから取得
+    static getGTBitefromModel(model){
+        let type = model.includes("GB") ? "GB" : "TB";
+        let biteString = model.split(" ")
+                              .filter(string => string.includes(type))
+                              .join("");
+        let atBite = biteString.indexOf(type);
+        return biteString.substring(0, atBite + 2);
     }
 
-    //ssdのブランド配列をbiteから取得
-    static getSsdBrands(ssdBite){
-        let ssdBrands = Model.ssdParts
-                            .filter(ssd => ssd.Model.includes(ssdBite))
-                            .map(ssd => ssd.Brand);
-        return Model.removeDuplicateInArr(ssdBrands);
+    //配列の重複を削除
+    static removeDuplicateInArr(arr){
+        let output = [];
+        let hashmap = {};
+        arr.forEach(value => hashmap[value] = value);
+        for(let key in hashmap) output.push(key);
+        return output;
+    }
+}
+
+class Model{
+  /*pcPartsのデータ構造
+    cpu:  pcParts[type][brand][model] = cpu本体
+    gpu:  pcParts[type][brand][model] = gpu本体
+    ram:  pcParts[type][amount][brand][model] = ram本体
+    storage:  pcParts[type][bite][brand][model] = storage本体*/
+    static pcParts = {};
+
+    //pcModelsのデータ構造(パソコン構築時に使用、モデル名はすべて異なるはず)
+    //model:  pcModels[model] = パーツ本体
+    static pcModels = {};
+
+    //セッター関数
+    static setCpuParts(parts){
+        parts.forEach(part => Model.pcParts[part.Type] = {});
+        parts.forEach(part => Model.pcParts[part.Type][part.Brand] = {});
+        parts.forEach(part => Model.pcParts[part.Type][part.Brand][part.Model] = part);
+
+        parts.forEach(part => Model.pcModels[part.Model] = part);
     }
 
-    //hddのモデル配列をbiteとブランドから取得
-    static getHddModels(hddBite, hddBrand){
-        return Model.hddParts
-                    .filter(hdd => hdd.Model.includes(hddBite))
-                    .filter(hdd => hdd.Brand === hddBrand)
-                    .map(hdd => hdd.Model);
+    static setGpuParts(parts){
+        Model.setCpuParts(parts);//処理が同じ
     }
 
-    //ssdのモデル配列をbiteとブランドから取得
-    static getSsdModels(ssdBite, ssdBrand){
-        return Model.ssdParts
-                    .filter(ssd => ssd.Model.includes(ssdBite))
-                    .filter(ssd => ssd.Brand === ssdBrand)
-                    .map(ssd => ssd.Model);
+    static setRamParts(parts){
+        parts.forEach(part => Model.pcParts[part.Type] = {});
+        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getRamAmount(part)] = {});
+        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getRamAmount(part)][part.Brand] = {});
+        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getRamAmount(part)][part.Brand][part.Model] = part);
+
+        parts.forEach(part => Model.pcModels[part.Model] = part);
     }
 
-    //各パーツをモデルから取得
-    static getCpu(cpuModel){
-        return Model.cpuParts.filter(cpu => cpu.Model === cpuModel)[0];
+    static setStorageParts(parts){
+        parts.forEach(part => Model.pcParts[part.Type] = {});
+        //バイト数配列を取得
+        let biteArr = SetterHelper.getStorageBiteArr(parts);
+        biteArr.forEach(bite => Model.pcParts[parts[0].Type][bite] = {});
+        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getGTBitefromModel(part.Model)][part.Brand] = {});
+        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getGTBitefromModel(part.Model)][part.Brand][part.Model] = part);
+    
+        parts.forEach(part => Model.pcModels[part.Model] = part);
     }
 
-    static getGpu(gpuModel){
-        return Model.gpuParts.filter(gpu => gpu.Model == gpuModel)[0];
+    //ゲッター関数
+    static getCpuBrandArr(){
+        return Object.keys(Model.pcParts["CPU"]);
     }
 
-    static getRam(ramModel){
-        return Model.ramParts.filter(ram => ram.Model === ramModel)[0];
+    static getCpuModelArr(brand){
+        return Object.keys(Model.pcParts["CPU"][brand]);
     }
 
-    static getHdd(hddModel){
-        return Model.hddParts.filter(hdd => hdd.Model === hddModel)[0];
+    static getGpuBrandArr(){
+        return Object.keys(Model.pcParts["GPU"]);
     }
 
-    static getSsd(ssdModel){
-        return Model.ssdParts.filter(ssd => ssd.Model === ssdModel)[0];
+    static getGpuModelArr(brand){
+        return Object.keys(Model.pcParts["GPU"][brand]);
+    }
+
+    static getRamAmountArr(){
+        return Object.keys(Model.pcParts["RAM"]);
+    }
+
+    static getRamBrandArr(amount){
+        return Object.keys(Model.pcParts["RAM"][amount]);
+    }
+
+    static getRamModelArr(amount, brand){
+        return Object.keys(Model.pcParts["RAM"][amount][brand]);
+    }
+
+    static getStorageBiteArr(type){
+        return Object.keys(Model.pcParts[type]);
+    }
+
+    static getStorageBrandArr(type, bite){
+        return Object.keys(Model.pcParts[type][bite]);
+    }
+
+    static getStorageModelArr(type, bite, brand){
+        return Object.keys(Model.pcParts[type][bite][brand]);
+    }
+
+    static getParts(model){
+        return Model.pcModels[model];
     }
 
     static calculateGamingScore(cpu, gpu, ram, storage){
@@ -184,7 +153,7 @@ class Model{
         gamingScore += cpu.Benchmark * 0.25;
         gamingScore += gpu.Benchmark * 0.6;
         gamingScore += ram.Benchmark * 0.125;
-
+        console.log(storage);
         switch(storage.Type){
             case "HDD":
                 gamingScore += storage.Benchmark * 0.025; break;
@@ -204,15 +173,6 @@ class Model{
         workScore += storage.Benchmark * 0.05;
 
         return workScore;
-    }
-
-    //配列の重複を削除
-    static removeDuplicateInArr(arr){
-        let output = [];
-        let hashmap = {};
-        arr.forEach(value => hashmap[value] = value);
-        for(let key in hashmap) output.push(key);
-        return output;
     }
 }
 
@@ -386,8 +346,8 @@ class View{
             let select1 = config.target.querySelectorAll("#select1")[0];
             let option1 = select1.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
-            let cpuBrands = Controller.getCpuBrands();
-            cpuBrands.forEach(cpuBrand => {
+            let cpuBrandArr = Controller.getCpuBrandArr();
+            cpuBrandArr.forEach(cpuBrand => {
                 option1.innerHTML += `<option value="${cpuBrand}">${cpuBrand}</option>`;
             });
         });
@@ -400,8 +360,8 @@ class View{
             let select2 = config.target.querySelectorAll("#select2")[0];
             let option1 = select2.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
-            let gpuBrands = Controller.getGpuBrands();
-            gpuBrands.forEach(gpuBrand => {
+            let gpuBrandArr = Controller.getGpuBrandArr();
+            gpuBrandArr.forEach(gpuBrand => {
                 option1.innerHTML += `<option value="${gpuBrand}">${gpuBrand}</option>`;
             });
         });
@@ -414,8 +374,8 @@ class View{
             let select3 = config.target.querySelectorAll("#select3")[0];
             let option1 = select3.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
-            let ramAmounts = Controller.getRamAmounts();
-            ramAmounts.forEach(ramAmount => {
+            let ramAmountArr = Controller.getRamAmountArr();
+            ramAmountArr.forEach(ramAmount => {
                 option1.innerHTML += `<option value="${ramAmount}">${ramAmount}</option>`;
             });
         });
@@ -423,17 +383,16 @@ class View{
 
     static setSelect4(){
         //select4のセット
-        //hddのセット
+        //各ストレージパーツのセット
         fetch(config.url + "hdd").then(response => response.json()).then(data => {
-            Controller.setHddParts(data);
+            Controller.setStorageParts(data);
             let select4 = config.target.querySelectorAll("#select4")[0];
             let option1 = select4.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
             option1.innerHTML += ` <option value="HDD">HDD</option>`;
         });
-        //ssdのセット
         fetch(config.url + "ssd").then(response => response.json()).then(data => {
-            Controller.setSsdParts(data);
+            Controller.setStorageParts(data);
             let select4 = config.target.querySelectorAll("#select4")[0];
             let option1 = select4.querySelectorAll("#option1")[0];
             option1.innerHTML += `<option value="SSD">SSD</option>`;
@@ -457,8 +416,8 @@ class View{
         option1.addEventListener("change", () => {
             option2.innerHTML = `<option selected>-</option>`;
             if(option1.value !== "-"){
-                let cpuModels = Controller.getCpuModels(option1.value);
-                cpuModels.forEach(cpuModel => {
+                let cpuModelArr = Controller.getCpuModelArr(option1.value);
+                cpuModelArr.forEach(cpuModel => {
                     option2.innerHTML += `<option value="${cpuModel}">${cpuModel}</option>`;
                 });
             }
@@ -473,8 +432,8 @@ class View{
         option1.addEventListener("change", () => {
             option2.innerHTML = `<option selected>-</option>`;
             if(option1.value !== "-"){
-                let gpuModels = Controller.getGpuModels(option1.value);
-                gpuModels.forEach(gpuModel => {
+                let gpuModelArr = Controller.getGpuModelArr(option1.value);
+                gpuModelArr.forEach(gpuModel => {
                     option2.innerHTML += `<option value="${gpuModel}">${gpuModel}</option>`;
                 });
             }
@@ -491,8 +450,8 @@ class View{
             option2.innerHTML = `<option selected>-</option>`;
             option3.innerHTML = `<option selected>-</option>`;
             if(option1.value !== "-"){
-                let ramBrands = Controller.getRamBrands(option1.value);
-                ramBrands.forEach(ramBrand => {
+                let brandArr = Controller.getRamBrandArr(option1.value);
+                brandArr.forEach(ramBrand => {
                     option2.innerHTML += `<option value="${ramBrand}">${ramBrand}</option>`;
                 });
             }
@@ -501,8 +460,8 @@ class View{
         option2.addEventListener("change", () => {
             option3.innerHTML = `<option selected>-</option>`;
             if(option2.value !== "-"){
-                let ramModels = Controller.getRamModels(option1.value, option2.value);
-                ramModels.forEach(ramModel => {
+                let ramModelArr = Controller.getRamModelArr(option1.value, option2.value);
+                ramModelArr.forEach(ramModel => {
                     option3.innerHTML += `<option value="${ramModel}">${ramModel}</option>`;
                 });
             }
@@ -520,14 +479,8 @@ class View{
             option2.innerHTML = `<option selected>-</option>`;
             option3.innerHTML = `<option selected>-</option>`;
             option4.innerHTML = `<option selected>-</option>`;
-            let storages = [];
-            switch(option1.value){
-                case "HDD":
-                    storages = Controller.getHddStorages(); break;
-                case "SSD":
-                    storages = Controller.getSsdStorages(); break;
-            }
-            storages.forEach(bite => {
+            let biteArr = Controller.getStorageBiteArr(option1.value);
+            biteArr.forEach(bite => {
                 option2.innerHTML += `<option value="${bite}">${bite}</option>`;
             });
         });
@@ -535,28 +488,16 @@ class View{
         option2.addEventListener("change", () => {
             option3.innerHTML = `<option selected>-</option>`;
             option4.innerHTML = `<option selected>-</option>`;
-            let brands = [];
-            switch(option1.value){
-                case "HDD":
-                    brands = Controller.getHddBrands(option2.value); break;
-                case "SSD":
-                    brands = Controller.getSsdBrands(option2.value); break;
-            }
-            brands.forEach(brand => {
+            let brandArr = Controller.getStorageBrandArr(option1.value, option2.value);
+            brandArr.forEach(brand => {
                 option3.innerHTML += `<option value="${brand}">${brand}</option>`;
             });
         });
         //option3の設定
         option3.addEventListener("change", () => {
             option4.innerHTML = `<option selected>-</option>`;
-            let models = [];
-            switch(option1.value){
-                case "HDD":
-                    models = Controller.getHddModels(option2.value, option3.value); break;
-                case "SSD":
-                    models = Controller.getSsdModels(option2.value, option3.value); break;
-            }
-            models.forEach(model => {
+            let modelArr = Model.getStorageModelArr(option1.value, option2.value, option3.value);
+            modelArr.forEach(model => {
                 option4.innerHTML += `<option value="${model}">${model}</option>`;
             });
         });
@@ -585,30 +526,16 @@ class View{
             /*cpuModel = "Core i9-10900K";
             gpuModel = "Radeon-VII";
             ramModel = "Vengeance LPX DDR4 3000 C15 4x4GB";
-            storageModel = "XPG SX8200 NVMe PCIe M.2 960GB";*/
+            storageModel = "XPG SX8200 NVMe PCIe M.2 960GB";//*/
 
 
             if(![cpuModel, gpuModel, ramModel, storageModel].includes("-")){
                 console.log("ベンチマークを計算して表示");
                 //各パーツをモデルから取得
-                let cpu = Controller.getCpu(cpuModel);
-                let gpu = Controller.getGpu(gpuModel);
-                let ram = Controller.getRam(ramModel);
-                let storage = {};
-                let storageType = config.target
-                                        .querySelectorAll("#select4")[0]
-                                        .querySelectorAll("#option1")[0]
-                                        .value;
-
-                //テスト用
-                //storageType = "SSD";
-
-                switch(storageType){
-                    case "HDD":
-                        storage = Controller.getHdd(storageModel); break;
-                    case "SSD":
-                        storage = Controller.getSsd(storageModel); break;
-                }
+                let cpu = Controller.getParts(cpuModel);
+                let gpu = Controller.getParts(gpuModel);
+                let ram = Controller.getParts(ramModel);
+                let storage = Controller.getParts(storageModel);
                 //各バーツからベンチマークを計算
                 let gamingScore = Controller.calculateGamingScore(cpu, gpu, ram, storage);
                 let workScore = Controller.calculateWorkScore(cpu, gpu, ram, storage);
@@ -662,15 +589,13 @@ class View{
     }
 }
 
-//主に画面の開始、modelとviewのデータを繋ぐ
+//主に画面の起動、modelとviewのデータを繋ぐ役割
 class Controller{
-    //画面のスタート
+    //画面の起動
     static startPage(){
         View.setInitPage();
     }
 
-    //セッター関数
-    //PCパーツをセット、セットは一度きり
     static setCpuParts(parts){
         Model.setCpuParts(parts);
     }
@@ -683,99 +608,52 @@ class Controller{
         Model.setRamParts(parts);
     }
 
-    static setHddParts(parts){
-        Model.setHddParts(parts);
-    }
-
-    static setSsdParts(parts){
-        Model.setSsdParts(parts);
+    static setStorageParts(parts){
+        Model.setStorageParts(parts);
     }
     
-    //ゲッター関数
-    //cpuのブランド配列を取得
-    static getCpuBrands(){
-        return Model.getCpuBrands();
+    static getCpuBrandArr(){
+        return Model.getCpuBrandArr();
     }
 
-    //cpuのモデル配列をcpuブランドから取得
-    static getCpuModels(cpuBrand){
-        return Model.getCpuModels(cpuBrand);
+    static getCpuModelArr(brand){
+        return Model.getCpuModelArr(brand);
     }
 
-    //gpuのブランド配列を取得
-    static getGpuBrands(){
-        return Model.getGpuBrands();
+    static getGpuBrandArr(){
+        return Model.getGpuBrandArr();
     }
 
-    //gpuのモデル配列をgpuブランドから取得
-    static getGpuModels(gpuBrand){
-        return Model.getGpuModels(gpuBrand);
+    static getGpuModelArr(brand){
+        return Model.getGpuModelArr(brand);
     }
 
-    //ramの本数(amount)配列を取得
-    static getRamAmounts(){
-        return Model.getRamAmounts();
+    static getRamAmountArr(){
+        return Model.getRamAmountArr();
     }
 
-    //ramのブランド配列をramの本数(amount)から取得
-    static getRamBrands(ramAmount){
-        return Model.getRamBrands(ramAmount);
+    static getRamBrandArr(amount){
+        return Model.getRamBrandArr(amount);
     }
 
-    //ramのモデル配列をramの本数(amount)とブランドから取得
-    static getRamModels(ramAmount, ramBrand){
-        return Model.getRamModels(ramAmount, ramBrand);
+    static getRamModelArr(amount, brand){
+        return Model.getRamModelArr(amount, brand);
     }
 
-    //hddのストレージ配列を取得
-    static getHddStorages(){
-        return Model.getHddStorages();
+    static getStorageBiteArr(type){
+        return Model.getStorageBiteArr(type);
     }
 
-    //ssdのストレージ配列を取得
-    static getSsdStorages(){
-        return Model.getSsdStorages();
+    static getStorageBrandArr(type, bite){
+        return Model.getStorageBrandArr(type, bite);
     }
 
-    //hddのブランド配列をbiteから取得
-    static getHddBrands(hddBite){
-        return Model.getHddBrands(hddBite);
+    static getStorageModelArr(type, bite, brand){
+        return Model.getStorageModelArr(type, bite, brand);
     }
 
-    //ssdのブランド配列をbiteから取得
-    static getSsdBrands(ssdBite){
-        return Model.getSsdBrands(ssdBite);
-    }
-
-    //hddのモデル配列をbiteとブランドから取得
-    static getHddModels(hddBite, hddBrand){
-        return Model.getHddModels(hddBite, hddBrand);
-    }
-
-    //ssdのモデル配列をbiteとブランドから取得
-    static getSsdModels(ssdBite, ssdBrand){
-        return Model.getSsdModels(ssdBite, ssdBrand);
-    }
-
-    //各パーツをモデルから取得
-    static getCpu(cpuModel){
-        return Model.getCpu(cpuModel);
-    }
-
-    static getGpu(gpuModel){
-        return Model.getGpu(gpuModel);
-    }
-
-    static getRam(ramModel){
-        return Model.getRam(ramModel);
-    }
-
-    static getHdd(hddModel){
-        return Model.getHdd(hddModel);
-    }
-
-    static getSsd(ssdModel){
-        return Model.getSsd(ssdModel);
+    static getParts(model){
+        return Model.getParts(model);
     }
 
     static calculateGamingScore(cpu, gpu, ram, storage){
@@ -787,5 +665,5 @@ class Controller{
     }
 }
 
-//スタート
+//画面起動
 Controller.startPage();
