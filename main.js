@@ -1,11 +1,23 @@
 const config = {
     target: document.getElementById("target"),
-    url: "https://api.recursionist.io/builder/computers?type="
+    url: "https://api.recursionist.io/builder/computers?type=",
+    gaming: {
+        "CPU": 0.25,
+        "GPU": 0.6,
+        "RAM": 0.125,
+        "HDD": 0.025,
+        "SSD": 0.1
+    },
+    work: {
+        "CPU": 0.6,
+        "GPU": 0.25,
+        "RAM": 0.1,
+        "HDD": 0.05,
+        "SSD": 0.05,
+    }
 };
 
-//セッターヘルパー関数
 class SetterHelper{
-    //ramの本数(amount)を取得
     static getRamAmount(ram){
         let stringArr = ram.Model.split(" ");
         let string = stringArr[stringArr.length - 1];
@@ -59,51 +71,43 @@ class SetterHelper{
 }
 
 class Model{
-  /*pcPartsのデータ構造
-    cpu:  pcParts[type][brand][model] = cpu本体
-    gpu:  pcParts[type][brand][model] = gpu本体
-    ram:  pcParts[type][amount][brand][model] = ram本体
-    storage:  pcParts[type][bite][brand][model] = storage本体*/
     static pcParts = {};
+    static partsModel = {};
 
-    //pcModelsのデータ構造(パソコン構築時に使用、モデル名はすべて異なるはず)
-    //model:  pcModels[model] = パーツ本体
-    static pcModels = {};
-
-    //セッター関数
-    static setCpuParts(parts){
-        parts.forEach(part => Model.pcParts[part.Type] = {});
-        parts.forEach(part => Model.pcParts[part.Type][part.Brand] = {});
-        parts.forEach(part => Model.pcParts[part.Type][part.Brand][part.Model] = part);
-
-        parts.forEach(part => Model.pcModels[part.Model] = part);
+    static setCpuParts(partsArr){
+        partsArr.forEach(parts => Model.pcParts[parts.Type] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][parts.Brand] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][parts.Brand][parts.Model] = parts);
+        partsArr.forEach(parts => Model.partsModel[parts.Model] = parts);
     }
 
-    static setGpuParts(parts){
-        Model.setCpuParts(parts);//処理が同じ
+    static setGpuParts(partsArr){
+        Model.setCpuParts(partsArr);
     }
 
-    static setRamParts(parts){
-        parts.forEach(part => Model.pcParts[part.Type] = {});
-        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getRamAmount(part)] = {});
-        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getRamAmount(part)][part.Brand] = {});
-        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getRamAmount(part)][part.Brand][part.Model] = part);
-
-        parts.forEach(part => Model.pcModels[part.Model] = part);
+    static setRamParts(partsArr){
+        partsArr.forEach(parts => Model.pcParts[parts.Type] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getRamAmount(parts)] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getRamAmount(parts)][parts.Brand] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getRamAmount(parts)][parts.Brand][parts.Model] = parts);
+        partsArr.forEach(parts => Model.partsModel[parts.Model] = parts);
     }
 
-    static setStorageParts(parts){
-        parts.forEach(part => Model.pcParts[part.Type] = {});
+    static setStorageParts(partsArr){
+        partsArr.forEach(parts => Model.pcParts[parts.Type] = {});
         //バイト数配列を取得
-        let biteArr = SetterHelper.getStorageBiteArr(parts);
-        biteArr.forEach(bite => Model.pcParts[parts[0].Type][bite] = {});
-        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getGTBitefromModel(part.Model)][part.Brand] = {});
-        parts.forEach(part => Model.pcParts[part.Type][SetterHelper.getGTBitefromModel(part.Model)][part.Brand][part.Model] = part);
-    
-        parts.forEach(part => Model.pcModels[part.Model] = part);
+        let biteArr = SetterHelper.getStorageBiteArr(partsArr);
+        biteArr.forEach(bite => Model.pcParts[partsArr[0].Type][bite] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getGTBitefromModel(parts.Model)][parts.Brand] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getGTBitefromModel(parts.Model)][parts.Brand][parts.Model] = parts);
+        partsArr.forEach(parts => Model.partsModel[parts.Model] = parts);
     }
 
-    //ゲッター関数
+    static freezeStaticMember(){
+        Object.freeze(Model.pcParts);
+        Object.freeze(Model.partsModel);
+    }
+
     static getCpuBrandArr(){
         return Object.keys(Model.pcParts["CPU"]);
     }
@@ -145,67 +149,46 @@ class Model{
     }
 
     static getParts(model){
-        return Model.pcModels[model];
+        return Model.partsModel[model];
     }
 
-    static calculateGamingScore(cpu, gpu, ram, storage){
-        let gamingScore = 0;
-        gamingScore += cpu.Benchmark * 0.25;
-        gamingScore += gpu.Benchmark * 0.6;
-        gamingScore += ram.Benchmark * 0.125;
-        console.log(storage);
-        switch(storage.Type){
-            case "HDD":
-                gamingScore += storage.Benchmark * 0.025; break;
-            case "SSD":
-                gamingScore += storage.Benchmark * 0.1; break;
-        }
-
-        return gamingScore;
+    static calculateGamingScore(partsArr){
+        return Math.round(partsArr.map(parts => parts.Benchmark * config.gaming[parts.Type])
+                                  .reduce((curr, total) => curr + total));
     }
 
-    static calculateWorkScore(cpu, gpu, ram, storage){
-        let workScore = 0;
-        //CPU 性能 60%、GPU 性能 25%、RAM 10%、ストレージ 5%
-        workScore += cpu.Benchmark * 0.6;
-        workScore += gpu.Benchmark * 0.25;
-        workScore += ram.Benchmark * 0.1;
-        workScore += storage.Benchmark * 0.05;
-
-        return workScore;
+    static calculateWorkScore(partsArr){
+        return Math.round(partsArr.map(parts => parts.Benchmark * config.work[parts.Type])
+                                  .reduce((curr, total) => curr + total));
     }
 }
 
 class View{
     static setInitPage(){
-        //画面の初期化
         config.target.innerHTML = ``;
-        config.target.classList.add("bg-light", "p-3");//後で考える
-        //タイトル画面のセット
-        View.setTitlePage();
-        //選択画面とボタンのセット
-        View.setSelectPage();
-        View.setButton();
-        //fetch関数でデータの取得と選択肢の設定
+        config.target.append(View.createTitleDiv());
+
+        let frameDiv = document.createElement("div");
+        frameDiv.classList.add("bg-light", "p-3");
+        frameDiv.append(View.createSelectDiv());
+        frameDiv.append(View.createButtonDiv());
+        frameDiv.append(View.createResultDiv());
+        config.target.append(frameDiv);
+
         View.setOptionsByFetch();
-        //イベントリスナーのセット
         View.setEventListener();
     }
 
-    //title画面のセット
-    static setTitlePage(){
-        //後で画面の微調整がしやすくするためそのまま書いた
-        config.target.innerHTML += `
-            <div class="bg-secondary text-white text-center p-2">
-                <h1><i class="fas fa-desktop mr-2"></i>Build Your Own Computer</h1>
-            </div>
-        `;
+    static createTitleDiv(){
+        let titleDiv = document.createElement("div");
+        titleDiv.classList.add("bg-secondary", "text-white", "text-center", "p-2");
+        titleDiv.innerHTML = `<h1><i class="fas fa-desktop mr-2"></i>Build Your Own Computer</h1>`;
+        return titleDiv;
     }
 
-    //select画面のセット
-    static setSelectPage(){
-        //後で画面の微調整がしやすくするためそのまま書いた
-        config.target.innerHTML += `
+    static createSelectDiv(){
+        let selectDiv = document.createElement("div");
+        selectDiv.innerHTML += `
             <div class="pt-3 pb-3">
                 <h5>step1: Select your CPU</h5>
                 <div class="d-sm-flex align-items-center" id="select1">
@@ -317,18 +300,23 @@ class View{
                 </div>
             </div>
         `;
+        return selectDiv;
     }
 
-    //ボタンの生成
-    static setButton(){
-        config.target.innerHTML += `
-            <div class="d-flex pb-4">
-                <button type="button" class="btn btn-primary col-3 col-md-2" id="buildButton">Add PC</button>
-                <p class="text-danger col-9 mt-2">クリックされると以下に結果を表示</p>
-            </div>
-            <div id="result">
-            </div>
+    static createButtonDiv(){
+        let buttonDiv = document.createElement("div");
+        buttonDiv.classList.add("d-flex", "pb-4");
+        buttonDiv.innerHTML += `
+            <button type="button" class="btn btn-primary col-3 col-md-2" id="buildButton">Add PC</button>
+            <p class="text-danger col-9 mt-2">クリックされると以下に結果を表示</p>
         `;
+        return buttonDiv;
+    }
+
+    static createResultDiv(){
+        let resultDiv = document.createElement("div");
+        resultDiv.id = "result";
+        return resultDiv;
     }
 
     //fetchで選択肢をセット
@@ -340,7 +328,6 @@ class View{
     }
 
     static setSelect1(){
-        //select1のセット
         fetch(config.url + "cpu").then(response => response.json()).then(data => {
             Controller.setCpuParts(data);
             let select1 = config.target.querySelectorAll("#select1")[0];
@@ -354,7 +341,6 @@ class View{
     }
 
     static setSelect2(){
-        //select2のセット
         fetch(config.url + "gpu").then(response => response.json()).then(data => {
             Controller.setGpuParts(data);
             let select2 = config.target.querySelectorAll("#select2")[0];
@@ -368,7 +354,6 @@ class View{
     }
 
     static setSelect3(){
-        //select3のセット
         fetch(config.url + "ram").then(response => response.json()).then(data => {
             Controller.setRamParts(data);
             let select3 = config.target.querySelectorAll("#select3")[0];
@@ -382,8 +367,6 @@ class View{
     }
 
     static setSelect4(){
-        //select4のセット
-        //各ストレージパーツのセット
         fetch(config.url + "hdd").then(response => response.json()).then(data => {
             Controller.setStorageParts(data);
             let select4 = config.target.querySelectorAll("#select4")[0];
@@ -393,6 +376,7 @@ class View{
         });
         fetch(config.url + "ssd").then(response => response.json()).then(data => {
             Controller.setStorageParts(data);
+            setTimeout(() => Controller.freezeStaticMember(), 2000);
             let select4 = config.target.querySelectorAll("#select4")[0];
             let option1 = select4.querySelectorAll("#option1")[0];
             option1.innerHTML += `<option value="SSD">SSD</option>`;
@@ -522,25 +506,22 @@ class View{
                                     .querySelectorAll("#select4")[0]
                                     .querySelectorAll("#option4")[0]
                                     .value;
-            //テスト用
-            /*cpuModel = "Core i9-10900K";
+            //テスト用--------------------
+            cpuModel = "Core i9-10900K";
             gpuModel = "Radeon-VII";
             ramModel = "Vengeance LPX DDR4 3000 C15 4x4GB";
             storageModel = "XPG SX8200 NVMe PCIe M.2 960GB";//*/
 
 
             if(![cpuModel, gpuModel, ramModel, storageModel].includes("-")){
-                console.log("ベンチマークを計算して表示");
-                //各パーツをモデルから取得
                 let cpu = Controller.getParts(cpuModel);
                 let gpu = Controller.getParts(gpuModel);
                 let ram = Controller.getParts(ramModel);
                 let storage = Controller.getParts(storageModel);
-                //各バーツからベンチマークを計算
-                let gamingScore = Controller.calculateGamingScore(cpu, gpu, ram, storage);
-                let workScore = Controller.calculateWorkScore(cpu, gpu, ram, storage);
-                console.log(gamingScore);
-                console.log(workScore);
+        
+                let partsArr = [cpu, gpu, ram, storage];
+                let gamingScore = Controller.calculateGamingScore(partsArr);
+                let workScore = Controller.calculateWorkScore(partsArr);
                 //結果を画面に表示
                 let resultLayout = ``;
                 resultLayout = `
@@ -570,7 +551,7 @@ class View{
                     </div>
                     <div class="d-flex justify-content-around">
                         <p class="col-5">Gaming: ${gamingScore}%</h6>
-                        <p class="col-5">work: ${workScore}%</h>
+                        <p class="col-5">Work: ${workScore}%</h>
                     </div>
                 </div>
                 </div>
@@ -589,27 +570,29 @@ class View{
     }
 }
 
-//主に画面の起動、modelとviewのデータを繋ぐ役割
 class Controller{
-    //画面の起動
     static startPage(){
         View.setInitPage();
     }
 
-    static setCpuParts(parts){
-        Model.setCpuParts(parts);
+    static setCpuParts(partsArr){
+        Model.setCpuParts(partsArr);
     }
 
-    static setGpuParts(parts){
-        Model.setGpuParts(parts);
+    static setGpuParts(partsArr){
+        Model.setGpuParts(partsArr);
     }
 
-    static setRamParts(parts){
-        Model.setRamParts(parts);
+    static setRamParts(partsArr){
+        Model.setRamParts(partsArr);
     }
 
-    static setStorageParts(parts){
-        Model.setStorageParts(parts);
+    static setStorageParts(partsArr){
+        Model.setStorageParts(partsArr);
+    }
+
+    static freezeStaticMember(){
+        Model.freezeStaticMember();
     }
     
     static getCpuBrandArr(){
@@ -656,14 +639,13 @@ class Controller{
         return Model.getParts(model);
     }
 
-    static calculateGamingScore(cpu, gpu, ram, storage){
-        return Model.calculateGamingScore(cpu, gpu, ram, storage);
+    static calculateGamingScore(partsArr){
+        return Model.calculateGamingScore(partsArr);
     }
 
-    static calculateWorkScore(cpu, gpu, ram, storage){
-        return Model.calculateWorkScore(cpu, gpu, ram, storage);
+    static calculateWorkScore(partsArr){
+        return Model.calculateWorkScore(partsArr);
     }
 }
 
-//画面起動
 Controller.startPage();
