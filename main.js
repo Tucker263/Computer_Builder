@@ -172,7 +172,13 @@ class View{
 
         let frameDiv = document.createElement("div");
         frameDiv.classList.add("bg-light", "p-3");
-        frameDiv.append(View.createSelectDiv());
+
+        //ハードコード、後で考える--->configで設定
+        frameDiv.append(View.createStepDiv("step1: Select your CPU", 1, ["Brand", "Model"]));
+        frameDiv.append(View.createStepDiv("step2: Select your GPU", 2, ["Brand", "Model"]));
+        frameDiv.append(View.createStepDiv("step3: Select your memory card", 3, ["How many?", "Brand", "Model"]));
+        frameDiv.append(View.createStepDiv("step4: Select your storage", 4, ["HDD or SSD", "Storage", "Brand", "Model"]));
+
         frameDiv.append(View.createButtonDiv());
         frameDiv.append(View.createResultDiv());
         config.target.append(frameDiv);
@@ -188,147 +194,37 @@ class View{
         return titleDiv;
     }
 
-    static createSelectFrame(){
-        let selectFrameDiv = document.createElement("div");
-        selectFrameDiv.classList.add("pt-3", "pb-3");
+    static createStepDiv(stepTitle, stepId, titleArr){
+        let stepDiv = document.createElement("div");
+        stepDiv.classList.add("pt-3", "pb-3");
+        stepDiv.innerHTML = `<h5>${stepTitle}</h5>`;
 
+        stepDiv.append(View.createOptionDiv(stepId, titleArr));
+
+        return stepDiv;
     }
 
-    //複数作る
-    static createOptionDiv(title, optionId){
+    static createOptionDiv(stepId, titleArr){
         let optionDiv = document.createElement("div");
-        optionDiv.classList.add("col-12", "col-sm-6");
-        optionDiv.innerHTML = `
+        optionDiv.classList.add("d-sm-flex", "align-items-center", "flex-wrap");
+        optionDiv.id = `select${stepId}`;
+        for(let i = 0; i < titleArr.length; i++) optionDiv.append(View.createOptionBody(titleArr[i], i + 1));
+        return optionDiv;
+    }
+
+    static createOptionBody(optionTitle, optionId){
+        let optionBody = document.createElement("div");
+        optionBody.classList.add("col-12", "col-sm-6");
+        optionBody.innerHTML = `
             <div class="d-sm-flex align-items-center">
-                <p class="fontSize-1p25 mt-1 col-12 col-sm-4">${title}</p>
+                <p class="fontSize-1p25 mt-1 col-12 col-sm-4">${optionTitle}</p>
                 <select class="custom-select col-8" id="option${optionId}">
                 </select>
             </div>
         `;
-        return optionDiv;
+        return optionBody;
     }
-
-    static a(){
-
-    }
-
-    static createSelectDiv(){
-        let selectDiv = document.createElement("div");
-        selectDiv.innerHTML += `
-            <div class="pt-3 pb-3">
-                <h5>step1: Select your CPU</h5>
-                <div class="d-sm-flex align-items-center flex-wrap" id="select1">
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
-                            <select class="custom-select col-8" id="option1">
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
-                            <select class="custom-select col-8" id="option2">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-3 pb-3">
-                <h5>step2: Select your GPU</h5>
-                <div class="d-sm-flex align-items-center flex-wrap" id="select2">
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
-                            <select class="custom-select col-8" id="option1">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
-                            <select class="custom-select col-8" id="option2">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-3 pb-3">
-                <h5>step3: Select your memory card</h5>
-                <div class="d-sm-flex align-items-center flex-wrap" id="select3">
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">How many?</p>
-                            <select class="custom-select col-8" id="option1">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
-                            <select class="custom-select col-8" id="option2">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
-                            <select class="custom-select col-8" id="option3">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-3 pb-3">
-                <h5>step4: Select your storage</h5>
-                <div class="d-sm-flex align-items-center flex-wrap" id="select4">
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">HDD or SSD</p>
-                            <select class="custom-select col-8" id="option1">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Storage</p>
-                            <select class="custom-select col-8" id="option2">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
-                            <select class="custom-select col-8" id="option3">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
-                            <select class="custom-select col-8" id="option4">
-                                <option selected>-</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        return selectDiv;
-    }
-
+          
     static createButtonDiv(){
         let buttonDiv = document.createElement("div");
         buttonDiv.classList.add("d-flex", "pb-4");
