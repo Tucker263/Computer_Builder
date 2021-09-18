@@ -255,58 +255,58 @@ class View{
     static setOptionsOfStep1(){
         fetch(config.url + "cpu").then(response => response.json()).then(data => {
             Controller.setCpuParts(data);
-            let step1 = config.target.querySelectorAll("#step1")[0];
-            let option1 = step1.querySelectorAll("#option1")[0];
+            let option1 = config.target.querySelectorAll("#step1")[0]
+                                       .querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
-            let cpuBrandArr = Controller.getCpuBrandArr();
-            cpuBrandArr.forEach(cpuBrand => {
-                option1.innerHTML += `<option value="${cpuBrand}">${cpuBrand}</option>`;
-            });
+            Controller.getCpuBrandArr()
+                      .forEach(cpuBrand => {
+                        option1.innerHTML += `<option value="${cpuBrand}">${cpuBrand}</option>`;
+                      });
         });
     }
 
     static setOptionsOfStep2(){
         fetch(config.url + "gpu").then(response => response.json()).then(data => {
             Controller.setGpuParts(data);
-            let step2 = config.target.querySelectorAll("#step2")[0];
-            let option1 = step2.querySelectorAll("#option1")[0];
+            let option1 = config.target.querySelectorAll("#step2")[0]
+                                       .querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
-            let gpuBrandArr = Controller.getGpuBrandArr();
-            gpuBrandArr.forEach(gpuBrand => {
-                option1.innerHTML += `<option value="${gpuBrand}">${gpuBrand}</option>`;
-            });
+            Controller.getGpuBrandArr()
+                      .forEach(gpuBrand => {
+                        option1.innerHTML += `<option value="${gpuBrand}">${gpuBrand}</option>`;
+                      });
         });
     }
 
     static setOptionsOfStep3(){
         fetch(config.url + "ram").then(response => response.json()).then(data => {
             Controller.setRamParts(data);
-            let step3 = config.target.querySelectorAll("#step3")[0];
-            let option1 = step3.querySelectorAll("#option1")[0];
+            let option1 = config.target.querySelectorAll("#step3")[0]
+                                       .querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
-            let ramAmountArr = Controller.getRamAmountArr();
-            ramAmountArr.forEach(ramAmount => {
-                option1.innerHTML += `<option value="${ramAmount}">${ramAmount}</option>`;
-            });
+            Controller.getRamAmountArr()
+                      .forEach(ramAmount => {
+                        option1.innerHTML += `<option value="${ramAmount}">${ramAmount}</option>`;
+                      });
         });
     }
 
     static setOptionsOfStep4(){
         fetch(config.url + "hdd").then(response => response.json()).then(data => {
             Controller.setStorageParts(data);
-            let step4 = config.target.querySelectorAll("#step4")[0];
-            let option1 = step4.querySelectorAll("#option1")[0];
-            option1.innerHTML = `<option selected>-</option>`;
-            option1.innerHTML += ` <option value="HDD">HDD</option>`;
         });
         fetch(config.url + "ssd").then(response => response.json()).then(data => {
             Controller.setStorageParts(data);
-            //2秒後に取得したデータを固定
-            setTimeout(() => Controller.freezeStaticMember(), 2000);
-            let step4 = config.target.querySelectorAll("#step4")[0];
-            let option1 = step4.querySelectorAll("#option1")[0];
-            option1.innerHTML += `<option value="SSD">SSD</option>`;
+            //1秒後に取得したデータを固定
+            setTimeout(() => Controller.freezeStaticMember(), 1000);
         });
+        let option1 = config.target.querySelectorAll("#step4")[0]
+                                   .querySelectorAll("#option1")[0];
+        option1.innerHTML = `
+            <option selected>-</option>
+            <option value="HDD">HDD</option>
+            <option value="SSD">SSD</option>
+        `;
     }
 
     static setEventListener(){
@@ -324,10 +324,10 @@ class View{
         option1.addEventListener("change", () => {
             option2.innerHTML = `<option selected>-</option>`;
             if(option1.value !== "-"){
-                let cpuModelArr = Controller.getCpuModelArr(option1.value);
-                cpuModelArr.forEach(cpuModel => {
-                    option2.innerHTML += `<option value="${cpuModel}">${cpuModel}</option>`;
-                });
+                Controller.getCpuModelArr(option1.value)
+                          .forEach(cpuModel => {
+                            option2.innerHTML += `<option value="${cpuModel}">${cpuModel}</option>`;
+                          });
             }
         });
     }
@@ -339,10 +339,10 @@ class View{
         option1.addEventListener("change", () => {
             option2.innerHTML = `<option selected>-</option>`;
             if(option1.value !== "-"){
-                let gpuModelArr = Controller.getGpuModelArr(option1.value);
-                gpuModelArr.forEach(gpuModel => {
-                    option2.innerHTML += `<option value="${gpuModel}">${gpuModel}</option>`;
-                });
+                Controller.getGpuModelArr(option1.value)
+                          .forEach(gpuModel => {
+                            option2.innerHTML += `<option value="${gpuModel}">${gpuModel}</option>`;
+                          });
             }
         });
     }
@@ -356,19 +356,19 @@ class View{
             option2.innerHTML = `<option selected>-</option>`;
             option3.innerHTML = `<option selected>-</option>`;
             if(option1.value !== "-"){
-                let brandArr = Controller.getRamBrandArr(option1.value);
-                brandArr.forEach(ramBrand => {
-                    option2.innerHTML += `<option value="${ramBrand}">${ramBrand}</option>`;
-                });
+                Controller.getRamBrandArr(option1.value)
+                          .forEach(ramBrand => {
+                            option2.innerHTML += `<option value="${ramBrand}">${ramBrand}</option>`;
+                          });
             }
         });
         option2.addEventListener("change", () => {
             option3.innerHTML = `<option selected>-</option>`;
             if(option2.value !== "-"){
-                let ramModelArr = Controller.getRamModelArr(option1.value, option2.value);
-                ramModelArr.forEach(ramModel => {
-                    option3.innerHTML += `<option value="${ramModel}">${ramModel}</option>`;
-                });
+                Controller.getRamModelArr(option1.value, option2.value)
+                          .forEach(ramModel => {
+                            option3.innerHTML += `<option value="${ramModel}">${ramModel}</option>`;
+                          });
             }
         });
     }
@@ -383,25 +383,31 @@ class View{
             option2.innerHTML = `<option selected>-</option>`;
             option3.innerHTML = `<option selected>-</option>`;
             option4.innerHTML = `<option selected>-</option>`;
-            let biteArr = Controller.getStorageBiteArr(option1.value);
-            biteArr.forEach(bite => {
-                option2.innerHTML += `<option value="${bite}">${bite}</option>`;
-            });
+            if(option1.value !== "-"){
+                Controller.getStorageBiteArr(option1.value)
+                          .forEach(bite => {
+                            option2.innerHTML += `<option value="${bite}">${bite}</option>`;
+                          });
+            }
         });
         option2.addEventListener("change", () => {
             option3.innerHTML = `<option selected>-</option>`;
             option4.innerHTML = `<option selected>-</option>`;
-            let brandArr = Controller.getStorageBrandArr(option1.value, option2.value);
-            brandArr.forEach(brand => {
-                option3.innerHTML += `<option value="${brand}">${brand}</option>`;
-            });
+            if(option2.value !== "-"){
+                Controller.getStorageBrandArr(option1.value, option2.value)
+                          .forEach(brand => {
+                            option3.innerHTML += `<option value="${brand}">${brand}</option>`;
+                          });
+            }
         });
         option3.addEventListener("change", () => {
             option4.innerHTML = `<option selected>-</option>`;
-            let modelArr = Model.getStorageModelArr(option1.value, option2.value, option3.value);
-            modelArr.forEach(model => {
-                option4.innerHTML += `<option value="${model}">${model}</option>`;
-            });
+            if(option3.value !== "-"){
+                Controller.getStorageModelArr(option1.value, option2.value, option3.value)
+                          .forEach(model => {
+                            option4.innerHTML += `<option value="${model}">${model}</option>`;
+                          });
+            }
         });
     }
 
@@ -431,13 +437,11 @@ class View{
                                 Controller.getParts(storageModel)];
                 let gamingScore = Controller.calculateGamingScore(partsArr);
                 let workScore = Controller.calculateWorkScore(partsArr);
-                config.target
-                      .querySelectorAll("#result")[0]
-                      .append(View.createResultFrame(partsArr, gamingScore, workScore));
+                let resultDiv = config.target.querySelectorAll("#result")[0];
+                resultDiv.innerHTML = ``;
+                resultDiv.append(View.createResultFrame(partsArr, gamingScore, workScore));
             }else{
-                config.target
-                      .querySelectorAll("#result")[0]
-                      .innerHTML = ``;
+                config.target.querySelectorAll("#result")[0].innerHTML = ``;
                 alert("全ての項目を入力してください");
             }
         });
