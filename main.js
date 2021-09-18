@@ -1,6 +1,14 @@
 const config = {
     target: document.getElementById("target"),
     url: "https://api.recursionist.io/builder/computers?type=",
+    stepTitle: ["Select your CPU", 
+                "Select your GPU", 
+                "Select your memory card", 
+                "Select your storage"],
+    optionArr2d: [["Brand", "Model"], 
+                  ["Brand", "Model"], 
+                  ["How many?", "Brand", "Model"], 
+                  ["HDD or SSD", "Storage", "Brand", "Model"]],
     gaming: {
         "CPU": 0.25,
         "GPU": 0.6,
@@ -16,8 +24,6 @@ const config = {
         "SSD": 0.05,
     }
 };
-//configにoptionのタイトルなどを格納する
-
 
 class SetterHelper{
     static getRamAmount(ram){
@@ -169,21 +175,8 @@ class View{
     static setInitPage(){
         config.target.innerHTML = ``;
         config.target.append(View.createTitleDiv());
-
-        let frameDiv = document.createElement("div");
-        frameDiv.classList.add("bg-light", "p-3");
-
-        //ハードコード、後で考える--->configで設定
-        frameDiv.append(View.createStepDiv("step1: Select your CPU", 1, ["Brand", "Model"]));
-        frameDiv.append(View.createStepDiv("step2: Select your GPU", 2, ["Brand", "Model"]));
-        frameDiv.append(View.createStepDiv("step3: Select your memory card", 3, ["How many?", "Brand", "Model"]));
-        frameDiv.append(View.createStepDiv("step4: Select your storage", 4, ["HDD or SSD", "Storage", "Brand", "Model"]));
-
-        frameDiv.append(View.createButtonDiv());
-        frameDiv.append(View.createResultDiv());
-        config.target.append(frameDiv);
-
-        View.setOptionsByFetch();
+        config.target.append(View.createBodyDiv());
+        View.setStepOptionsByFetch();
         View.setEventListener();
     }
 
@@ -194,20 +187,29 @@ class View{
         return titleDiv;
     }
 
+    static createBodyDiv(){
+        let bodyDiv = document.createElement("div");
+        bodyDiv.classList.add("bg-light", "p-3");
+        for(let i = 0; i < config.stepTitle.length; i++){
+            bodyDiv.append(View.createStepDiv(config.stepTitle[i], i + 1, config.optionArr2d[i]));
+        }
+        bodyDiv.append(View.createButtonDiv());
+        bodyDiv.append(View.createResultDiv());
+        return bodyDiv;
+    }
+
     static createStepDiv(stepTitle, stepId, titleArr){
         let stepDiv = document.createElement("div");
         stepDiv.classList.add("pt-3", "pb-3");
-        stepDiv.innerHTML = `<h5>${stepTitle}</h5>`;
-
+        stepDiv.innerHTML = `<h5>step${stepId}: ${stepTitle}</h5>`;
         stepDiv.append(View.createOptionDiv(stepId, titleArr));
-
         return stepDiv;
     }
 
     static createOptionDiv(stepId, titleArr){
         let optionDiv = document.createElement("div");
         optionDiv.classList.add("d-sm-flex", "align-items-center", "flex-wrap");
-        optionDiv.id = `select${stepId}`;
+        optionDiv.id = `step${stepId}`;
         for(let i = 0; i < titleArr.length; i++) optionDiv.append(View.createOptionBody(titleArr[i], i + 1));
         return optionDiv;
     }
@@ -219,6 +221,7 @@ class View{
             <div class="d-sm-flex align-items-center">
                 <p class="fontSize-1p25 mt-1 col-12 col-sm-4">${optionTitle}</p>
                 <select class="custom-select col-8" id="option${optionId}">
+                    <option selected>-</option>
                 </select>
             </div>
         `;
@@ -241,18 +244,18 @@ class View{
         return resultDiv;
     }
 
-    //fetchで選択肢をセット
-    static setOptionsByFetch(){
-        View.setSelect1();
-        View.setSelect2();
-        View.setSelect3();
-        View.setSelect4();
+    //データの取得とoptionのセット
+    static setStepOptionsByFetch(){
+        View.setOptionsOfStep1();
+        View.setOptionsOfStep2();
+        View.setOptionsOfStep3();
+        View.setOptionsOfStep4();
     }
 
-    static setSelect1(){
+    static setOptionsOfStep1(){
         fetch(config.url + "cpu").then(response => response.json()).then(data => {
             Controller.setCpuParts(data);
-            let select1 = config.target.querySelectorAll("#select1")[0];
+            let select1 = config.target.querySelectorAll("#step1")[0];
             let option1 = select1.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
             let cpuBrandArr = Controller.getCpuBrandArr();
@@ -262,10 +265,10 @@ class View{
         });
     }
 
-    static setSelect2(){
+    static setOptionsOfStep2(){
         fetch(config.url + "gpu").then(response => response.json()).then(data => {
             Controller.setGpuParts(data);
-            let select2 = config.target.querySelectorAll("#select2")[0];
+            let select2 = config.target.querySelectorAll("#step2")[0];
             let option1 = select2.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
             let gpuBrandArr = Controller.getGpuBrandArr();
@@ -275,10 +278,10 @@ class View{
         });
     }
 
-    static setSelect3(){
+    static setOptionsOfStep3(){
         fetch(config.url + "ram").then(response => response.json()).then(data => {
             Controller.setRamParts(data);
-            let select3 = config.target.querySelectorAll("#select3")[0];
+            let select3 = config.target.querySelectorAll("#step3")[0];
             let option1 = select3.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
             let ramAmountArr = Controller.getRamAmountArr();
@@ -288,24 +291,24 @@ class View{
         });
     }
 
-    static setSelect4(){
+    static setOptionsOfStep4(){
         fetch(config.url + "hdd").then(response => response.json()).then(data => {
             Controller.setStorageParts(data);
-            let select4 = config.target.querySelectorAll("#select4")[0];
+            let select4 = config.target.querySelectorAll("#step4")[0];
             let option1 = select4.querySelectorAll("#option1")[0];
             option1.innerHTML = `<option selected>-</option>`;
             option1.innerHTML += ` <option value="HDD">HDD</option>`;
         });
         fetch(config.url + "ssd").then(response => response.json()).then(data => {
             Controller.setStorageParts(data);
+            //2秒後に取得したデータを固定
             setTimeout(() => Controller.freezeStaticMember(), 2000);
-            let select4 = config.target.querySelectorAll("#select4")[0];
+            let select4 = config.target.querySelectorAll("#step4")[0];
             let option1 = select4.querySelectorAll("#option1")[0];
             option1.innerHTML += `<option value="SSD">SSD</option>`;
         });
     }
 
-    //イベントリスナーのセット
     static setEventListener(){
         View.setEventListenerOfS1();
         View.setEventListenerOfS2();
@@ -314,8 +317,8 @@ class View{
         View.setEventListenerButton();
     }
 
-    static setEventListenerOfS1(){//S1はselect1の略
-        let select1 = config.target.querySelectorAll("#select1")[0];
+    static setEventListenerOfS1(){//S1はstep1の略
+        let select1 = config.target.querySelectorAll("#step1")[0];
         let option1 = select1.querySelectorAll("#option1")[0];
         let option2 = select1.querySelectorAll("#option2")[0];
         //option1の設定
@@ -331,7 +334,7 @@ class View{
     }
 
     static setEventListenerOfS2(){//S2はselect2の略
-        let select2 = config.target.querySelectorAll("#select2")[0];
+        let select2 = config.target.querySelectorAll("#step2")[0];
         let option1 = select2.querySelectorAll("#option1")[0];
         let option2 = select2.querySelectorAll("#option2")[0];
         //option1の設定
@@ -347,7 +350,7 @@ class View{
     }
 
     static setEventListenerOfS3(){//S3はselect3の略
-        let select3 = config.target.querySelectorAll("#select3")[0];
+        let select3 = config.target.querySelectorAll("#step3")[0];
         let option1 = select3.querySelectorAll("#option1")[0];
         let option2 = select3.querySelectorAll("#option2")[0];
         let option3 = select3.querySelectorAll("#option3")[0];
@@ -375,7 +378,7 @@ class View{
     }
 
     static setEventListenerOfS4(){//S4はselect4の略
-        let select4 = config.target.querySelectorAll("#select4")[0];
+        let select4 = config.target.querySelectorAll("#step4")[0];
         let option1 = select4.querySelectorAll("#option1")[0];
         let option2 = select4.querySelectorAll("#option2")[0];
         let option3 = select4.querySelectorAll("#option3")[0];
@@ -413,19 +416,19 @@ class View{
         let button = config.target.querySelectorAll("#buildButton")[0];
         button.addEventListener("click", () => {
             let cpuModel = config.target
-                                .querySelectorAll("#select1")[0]
+                                .querySelectorAll("#step1")[0]
                                 .querySelectorAll("#option2")[0]
                                 .value;
             let gpuModel = config.target
-                                .querySelectorAll("#select2")[0]
+                                .querySelectorAll("#step2")[0]
                                 .querySelectorAll("#option2")[0]
                                 .value;
             let ramModel = config.target
-                                .querySelectorAll("#select3")[0]
+                                .querySelectorAll("#step3")[0]
                                 .querySelectorAll("#option3")[0]
                                 .value;
             let storageModel = config.target
-                                    .querySelectorAll("#select4")[0]
+                                    .querySelectorAll("#step4")[0]
                                     .querySelectorAll("#option4")[0]
                                     .value;
             //テスト用--------------------
@@ -570,4 +573,5 @@ class Controller{
     }
 }
 
+//画面の起動
 Controller.startPage();
