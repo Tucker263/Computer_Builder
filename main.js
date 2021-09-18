@@ -189,7 +189,7 @@ class View{
 
     static createBodyDiv(){
         let bodyDiv = document.createElement("div");
-        bodyDiv.classList.add("bg-light", "p-3");
+        bodyDiv.classList.add("bg-light", "p-3", "pl-md-5", "pr-md-5");
         for(let i = 0; i < config.stepTitle.length; i++){
             bodyDiv.append(View.createStepDiv(config.stepTitle[i], i + 1, config.optionArr2d[i]));
         }
@@ -232,7 +232,7 @@ class View{
         let buttonDiv = document.createElement("div");
         buttonDiv.classList.add("d-flex", "pb-4");
         buttonDiv.innerHTML += `
-            <button type="button" class="btn btn-primary col-3 col-md-2" id="buildButton">Add PC</button>
+            <button type="button" class="btn btn-primary col-3" id="buildButton">Add PC</button>
             <p class="text-danger col-9 mt-2">クリックされると以下に結果を表示</p>
         `;
         return buttonDiv;
@@ -244,7 +244,7 @@ class View{
         return resultDiv;
     }
 
-    //データの取得とoptionのセット
+    //APIでデータの取得とoptionsのセット
     static setStepOptionsByFetch(){
         View.setOptionsOfStep1();
         View.setOptionsOfStep2();
@@ -424,67 +424,59 @@ class View{
                                     .querySelectorAll("#step4")[0]
                                     .querySelectorAll("#option4")[0]
                                     .value;
-            //テスト用--------------------
-            cpuModel = "Core i9-10900K";
-            gpuModel = "Radeon-VII";
-            ramModel = "Vengeance LPX DDR4 3000 C15 4x4GB";
-            storageModel = "XPG SX8200 NVMe PCIe M.2 960GB";//*/
-
-
             if(![cpuModel, gpuModel, ramModel, storageModel].includes("-")){
-                let cpu = Controller.getParts(cpuModel);
-                let gpu = Controller.getParts(gpuModel);
-                let ram = Controller.getParts(ramModel);
-                let storage = Controller.getParts(storageModel);
-        
-                let partsArr = [cpu, gpu, ram, storage];
+                let partsArr = [Controller.getParts(cpuModel), 
+                                Controller.getParts(gpuModel), 
+                                Controller.getParts(ramModel), 
+                                Controller.getParts(storageModel)];
                 let gamingScore = Controller.calculateGamingScore(partsArr);
                 let workScore = Controller.calculateWorkScore(partsArr);
-                //結果を画面に表示
-                let resultLayout = ``;
-                resultLayout = `
-                <div class="col-12 d-flex justify-content-center">
-                <div class="bg-lightblue font-weight-bold p-2 mb-2 col-12 col-md-9">
-                    <div class="d-flex flex-wrap">
-                        <div class="col-6 border">
-                            <p>CPU</p>
-                            <p>Brand:${cpu.Brand}</p>
-                            <p>Model:${cpu.Model}</p>
-                        </div>
-                        <div class="col-6 border">
-                            <p>GPU</p>
-                            <p>Brand:${gpu.Brand}</p>
-                            <p>Model:${gpu.Model}</p>
-                        </div>
-                        <div class="col-6 border">
-                            <p>RAM</p>
-                            <p>Brand:${ram.Brand}</p>
-                            <p>Model:${ram.Model}</p>
-                        </div>
-                        <div class="col-6 border">
-                            <p>Storage</p>
-                            <p>Brand:${storage.Brand}</p>
-                            <p>Model:${storage.Model}</p>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-around">
-                        <p class="col-5">Gaming: ${gamingScore}%</h6>
-                        <p class="col-5">Work: ${workScore}%</h>
-                    </div>
-                </div>
-                </div>
-                `;
-
-                let result = config.target.querySelectorAll("#result")[0];
-                result.innerHTML = resultLayout;
-
-
+                config.target
+                      .querySelectorAll("#result")[0]
+                      .append(View.createResultFrame(partsArr, gamingScore, workScore));
             }else{
-                let result = config.target.querySelectorAll("#result")[0];
-                result.innerHTML = ``;
+                config.target
+                      .querySelectorAll("#result")[0]
+                      .innerHTML = ``;
                 alert("全ての項目を入力してください");
             }
         });
+    }
+
+    static createResultFrame(partsArr, gamingScore, workScore){
+        let resultFrame = document.createElement("div");
+        resultFrame.classList.add("col-12", "d-flex",  "justify-content-center");
+        let resultBody = document.createElement("div");
+        resultBody.classList.add("bg-lightblue", "font-weight-bold", "p-2", "mb-2", "col-12", "col-md-9");
+        resultBody.append(View.createPartsInfoDiv(partsArr));
+        resultBody.append(View.createScoreInfoDiv(gamingScore, workScore));
+        resultFrame.append(resultBody);                 
+        return resultFrame;
+    }
+
+    static createPartsInfoDiv(partsArr){
+        let partsInfoDiv = document.createElement("div");
+        partsInfoDiv.classList.add("d-flex", "flex-wrap");
+        partsArr.forEach(parts => {
+            partsInfoDiv.innerHTML += `
+                <div class="col-6 border">
+                    <p>${parts.Type}</p>
+                    <p>Brand: ${parts.Brand}</p>
+                    <p>Model:<br>${parts.Model}</p>
+                </div>
+            `;
+        });
+        return partsInfoDiv;
+    }
+
+    static createScoreInfoDiv(gamingScore, workScore){
+        let scoreInfoDiv = document.createElement("div");
+        scoreInfoDiv.classList.add("d-flex", "justify-content-around", "fontSize-1p25");
+        scoreInfoDiv.innerHTML = `
+            <p class="col-5">Gaming: ${gamingScore}%</p>
+            <p class="col-5">Work: ${workScore}%</p>
+        `;
+        return scoreInfoDiv;
     }
 }
 
