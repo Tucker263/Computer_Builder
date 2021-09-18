@@ -16,6 +16,8 @@ const config = {
         "SSD": 0.05,
     }
 };
+//configにoptionのタイトルなどを格納する
+
 
 class SetterHelper{
     static getRamAmount(ram){
@@ -186,23 +188,47 @@ class View{
         return titleDiv;
     }
 
+    static createSelectFrame(){
+        let selectFrameDiv = document.createElement("div");
+        selectFrameDiv.classList.add("pt-3", "pb-3");
+
+    }
+
+    //複数作る
+    static createOptionDiv(title, optionId){
+        let optionDiv = document.createElement("div");
+        optionDiv.classList.add("col-12", "col-sm-6");
+        optionDiv.innerHTML = `
+            <div class="d-sm-flex align-items-center">
+                <p class="fontSize-1p25 mt-1 col-12 col-sm-4">${title}</p>
+                <select class="custom-select col-8" id="option${optionId}">
+                </select>
+            </div>
+        `;
+        return optionDiv;
+    }
+
+    static a(){
+
+    }
+
     static createSelectDiv(){
         let selectDiv = document.createElement("div");
         selectDiv.innerHTML += `
             <div class="pt-3 pb-3">
                 <h5>step1: Select your CPU</h5>
-                <div class="d-sm-flex align-items-center" id="select1">
-                    <div class="col-12 col-sm-4">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-2">Brand</p>
-                            <select class="custom-select col-9" id="option1">
+                <div class="d-sm-flex align-items-center flex-wrap" id="select1">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
+                            <select class="custom-select col-8" id="option1">
                             </select>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-4">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-2">Model</p>
-                            <select class="custom-select col-9" id="option2">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
+                            <select class="custom-select col-8" id="option2">
                                 <option selected>-</option>
                             </select>
                         </div>
@@ -212,19 +238,19 @@ class View{
 
             <div class="pt-3 pb-3">
                 <h5>step2: Select your GPU</h5>
-                <div class="d-sm-flex align-items-center" id="select2">
-                    <div class="col-12 col-sm-4">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-2">Brand</p>
-                            <select class="custom-select col-9" id="option1">
+                <div class="d-sm-flex align-items-center flex-wrap" id="select2">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
+                            <select class="custom-select col-8" id="option1">
                                 <option selected>-</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-4">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-2">Model</p>
-                            <select class="custom-select col-9" id="option2">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
+                            <select class="custom-select col-8" id="option2">
                                 <option selected>-</option>
                             </select>
                         </div>
@@ -234,27 +260,27 @@ class View{
 
             <div class="pt-3 pb-3">
                 <h5>step3: Select your memory card</h5>
-                <div class="d-sm-flex align-items-center" id="select3">
-                    <div class="col-12 col-sm-4">
+                <div class="d-sm-flex align-items-center flex-wrap" id="select3">
+                    <div class="col-12 col-sm-6">
                         <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 mr-2">How many?</p>
-                            <select class="custom-select col-9 col-sm-6" id="option1">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">How many?</p>
+                            <select class="custom-select col-8" id="option1">
                                 <option selected>-</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-4">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-2">Brand</p>
-                            <select class="custom-select col-9" id="option2">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
+                            <select class="custom-select col-8" id="option2">
                                 <option selected>-</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-4">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-2">Model</p>
-                            <select class="custom-select col-9" id="option3">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
+                            <select class="custom-select col-8" id="option3">
                                 <option selected>-</option>
                             </select>
                         </div>
@@ -264,35 +290,35 @@ class View{
 
             <div class="pt-3 pb-3">
                 <h5>step4: Select your storage</h5>
-                <div class="d-sm-flex align-items-center" id="select4">
-                    <div class="col-12 col-sm-3">
+                <div class="d-sm-flex align-items-center flex-wrap" id="select4">
+                    <div class="col-12 col-sm-6">
                         <div class="d-sm-flex align-items-center">
-                            <p class="fontSize-1p25 mt-1 mr-1">HDD or SSD</p>
-                            <select class="custom-select col-9 col-sm-6 col-md-9" id="option1">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">HDD or SSD</p>
+                            <select class="custom-select col-8" id="option1">
                                 <option selected>-</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-3">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-1">Storage</p>
-                            <select class="custom-select col-9 col-sm-8 col-md-9" id="option2">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Storage</p>
+                            <select class="custom-select col-8" id="option2">
                                 <option selected>-</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-3">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-1">Brand</p>
-                            <select class="custom-select col-9" id="option3">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Brand</p>
+                            <select class="custom-select col-8" id="option3">
                                 <option selected>-</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-3">
-                        <div class="d-sm-flex">
-                            <p class="fontSize-1p25 mt-1 mr-1">Model</p>
-                            <select class="custom-select col-9" id="option4">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-sm-flex align-items-center">
+                            <p class="fontSize-1p25 mt-1 col-12 col-sm-4">Model</p>
+                            <select class="custom-select col-8" id="option4">
                                 <option selected>-</option>
                             </select>
                         </div>
