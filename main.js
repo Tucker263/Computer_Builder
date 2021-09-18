@@ -32,43 +32,33 @@ class SetterHelper{
         return string.substring(0, string.indexOf("x"));
     }
 
-    //ストレージのバイト数配列を取得
     static getStorageBiteArr(storageParts){
-        let gbArr = SetterHelper.getBiteArr(storageParts, "GB");
-        let tbArr = SetterHelper.getBiteArr(storageParts, "TB");
+        let gbArr = SetterHelper.getBiteArrFromUnit(storageParts, "GB");
+        let tbArr = SetterHelper.getBiteArrFromUnit(storageParts, "TB");
         return tbArr.concat(gbArr);
     }
 
-    //Biteの配列をパーツ配列とタイプ(TBかGB)から取得
-    static getBiteArr(storageParts, type){
+    static getBiteArrFromUnit(storageParts, biteUnit){
         let biteArr = storageParts.map(parts => parts.Model)
-                                .filter(model => model.includes(type))
-                                .map(model => SetterHelper.getBitefromModel(model, type))
-                                .sort((a, b) => b - a)
-                                .map(amount => amount + type);
+                                  .filter(model => model.includes(biteUnit))
+                                  .map(model => SetterHelper.getBiteNumfromUnit(model, biteUnit))
+                                  .sort((a, b) => b - a)
+                                  .map(biteNum => biteNum + biteUnit);
         return SetterHelper.removeDuplicateInArr(biteArr);
     }
 
-    //Biteをモデルとタイプから取得
-    static getBitefromModel(model, type){
+    static getBiteNumfromUnit(model, biteUnit){
         let biteString = model.split(" ")
-                              .filter(string => string.includes(type))
+                              .filter(string => string.includes(biteUnit))
                               .join("");
-        let atBite = biteString.indexOf(type);
-        return biteString.substring(0, atBite);
+        return biteString.substring(0, biteString.indexOf(biteUnit));
     }
 
-    //GB、TBをモデルから取得
-    static getGTBitefromModel(model){
-        let type = model.includes("GB") ? "GB" : "TB";
-        let biteString = model.split(" ")
-                              .filter(string => string.includes(type))
-                              .join("");
-        let atBite = biteString.indexOf(type);
-        return biteString.substring(0, atBite + 2);
+    static getBitefromModel(model){
+        let biteUnit = model.includes("GB") ? "GB" : "TB";
+        return SetterHelper.getBiteNumfromUnit(model, biteUnit) + biteUnit;
     }
 
-    //配列の重複を削除
     static removeDuplicateInArr(arr){
         let output = [];
         let hashmap = {};
@@ -103,11 +93,10 @@ class Model{
 
     static setStorageParts(partsArr){
         partsArr.forEach(parts => Model.pcParts[parts.Type] = {});
-        //バイト数配列を取得
-        let biteArr = SetterHelper.getStorageBiteArr(partsArr);
-        biteArr.forEach(bite => Model.pcParts[partsArr[0].Type][bite] = {});
-        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getGTBitefromModel(parts.Model)][parts.Brand] = {});
-        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getGTBitefromModel(parts.Model)][parts.Brand][parts.Model] = parts);
+        SetterHelper.getStorageBiteArr(partsArr)
+                    .forEach(bite => Model.pcParts[partsArr[0].Type][bite] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getBitefromModel(parts.Model)][parts.Brand] = {});
+        partsArr.forEach(parts => Model.pcParts[parts.Type][SetterHelper.getBitefromModel(parts.Model)][parts.Brand][parts.Model] = parts);
         partsArr.forEach(parts => Model.partsModel[parts.Model] = parts);
     }
 
@@ -244,8 +233,7 @@ class View{
         return resultDiv;
     }
 
-    //APIでデータの取得とoptionsのセット
-    static setStepOptionsByFetch(){
+    static setStepOptionsByFetch(){ //APIでデータの取得とoptionsのセット
         View.setOptionsOfStep1();
         View.setOptionsOfStep2();
         View.setOptionsOfStep3();
@@ -297,8 +285,7 @@ class View{
         });
         fetch(config.url + "ssd").then(response => response.json()).then(data => {
             Controller.setStorageParts(data);
-            //1秒後に取得したデータを固定
-            setTimeout(() => Controller.freezeStaticMember(), 1000);
+            setTimeout(() => Controller.freezeStaticMember(), 1000); //1秒後にModelクラスのstatic変数を固定
         });
         let option1 = config.target.querySelectorAll("#step4")[0]
                                    .querySelectorAll("#option1")[0];
@@ -562,5 +549,4 @@ class Controller{
     }
 }
 
-//画面の起動
-Controller.startPage();
+Controller.startPage(); //画面の起動
